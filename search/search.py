@@ -1,3 +1,4 @@
+# coding=UTF-8
 # search.py
 # ---------
 # Licensing Information:  You are free to use or extend these projects for
@@ -61,6 +62,50 @@ class SearchProblem:
         """
         util.raiseNotDefined()
 
+def nullHeuristic(state, problem=None):
+    """
+    A heuristic function estimates the cost from the current state to the nearest
+    goal in the provided SearchProblem.  This heuristic is trivial.
+    """
+    return 0
+
+class GraphSearch:
+    def __init__(self, problem, data_structre, have_cost=False, heuristic=nullHeuristic):
+        self.problem = problem
+        self.data_structre = data_structre
+        self.have_cost = have_cost
+        self.heuristic = heuristic
+
+    def graph_search(self):
+        open_list = self.data_structre()  # 初始化Open表
+
+        if self.have_cost:
+            # push的为((state,action),cost) pop时 不pop cost
+            open_list.push((self.problem.getStartState(), []), self.heuristic(self.problem.getStartState(), self.problem))
+        else:
+            open_list.push((self.problem.getStartState(), []))  # Open表中为二元组(状态,到达该状态的actions)
+
+        closed_list = []
+        while True:
+            if open_list.isEmpty(): 
+                return [] 
+            state, actions = open_list.pop()
+            
+            if self.problem.isGoalState(state):  # 如果当前状态是目标状态,则搜索成功,返回操作序列actions
+                return actions       
+
+            if state not in closed_list:
+                closed_list.append(state)
+                for successor_state, action, cost in self.problem.getSuccessors(state):
+                    if self.have_cost:
+                        open_list.push((successor_state, actions+[action]), self.problem.getCostOfActions(actions+[action]) + self.heuristic(successor_state, self.problem))
+                    else:
+                        open_list.push((successor_state, actions+[action]))  # 用+防止actions为空
+
+
+
+
+
 
 def tinyMazeSearch(problem):
     """
@@ -87,30 +132,26 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    dfs = GraphSearch(problem, util.Stack)
+    return dfs.graph_search()
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    bfs = GraphSearch(problem, util.Queue)
+    return bfs.graph_search()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
-def nullHeuristic(state, problem=None):
-    """
-    A heuristic function estimates the cost from the current state to the nearest
-    goal in the provided SearchProblem.  This heuristic is trivial.
-    """
-    return 0
+    ucs = GraphSearch(problem, util.PriorityQueue, True)
+    return ucs.graph_search()
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
+    astar = GraphSearch(problem, util.PriorityQueue, True, heuristic)
+    return astar.graph_search()
 
 # Abbreviations
 bfs = breadthFirstSearch
