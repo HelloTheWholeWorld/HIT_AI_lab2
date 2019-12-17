@@ -1,3 +1,4 @@
+# coding=UTF-8
 # searchAgents.py
 # ---------------
 # Licensing Information:  You are free to use or extend these projects for
@@ -40,6 +41,7 @@ from game import Actions
 import util
 import time
 import search
+from copy import copy
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -288,6 +290,14 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        # CornersProblem 是基于第一到四问的搜索算法来的
+
+        # 定义状态的结构为(position, res_to_veist)
+        self.start_state = (self.startingPosition, list(self.corners))
+        self.stepCost = 1
+        self.corners_list = list(self.corners)
+
+
 
     def getStartState(self):
         """
@@ -295,14 +305,15 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.start_state
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return len(state[1]) == 0
+
 
     def getSuccessors(self, state):
         """
@@ -325,6 +336,18 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            x,y = state[0]
+            res_to_visit = state[1]
+            # print(res_to_visit)
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
+            if not hitsWall:
+                # 没撞墙就要计算这个目标点的状态
+                temp = copy(res_to_visit)
+                if (nextx, nexty) in res_to_visit:
+                    temp.remove((nextx, nexty))
+                successors.append( (((nextx, nexty), temp), action, self.stepCost))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors

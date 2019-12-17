@@ -69,18 +69,37 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
-class GraphSearch:
-    def __init__(self, problem, data_structre, have_cost=False, heuristic=nullHeuristic):
+class GraphSearch(object):
+    '''
+    1-4问的搜索算法
+    '''
+    def __init__(self, problem, data_structure, have_cost=False, heuristic=nullHeuristic):
+        '''
+        初始化函数
+
+        args:
+            problem: 问题对象
+            data_structure: 问题使用的数据结构
+            have_cost: 是否有代价函数
+            heuristic: 启发函数
+        '''
         self.problem = problem
-        self.data_structre = data_structre
+        self.data_structure = data_structure
         self.have_cost = have_cost
         self.heuristic = heuristic
 
     def graph_search(self):
-        open_list = self.data_structre()  # 初始化Open表
+        '''
+        搜索函数
+        
+        returns:
+            if successfully get to goal state : return actions list
+            else : return None list
+        '''
+        open_list = self.data_structure()  # 初始化Open表
 
         if self.have_cost:
-            # push的为((state,action),cost) pop时 不pop cost
+            # push的为((state,action),cost) utils定义的数据结构pop时不返回cost=
             open_list.push((self.problem.getStartState(), []), self.heuristic(self.problem.getStartState(), self.problem))
         else:
             open_list.push((self.problem.getStartState(), []))  # Open表中为二元组(状态,到达该状态的actions)
@@ -101,10 +120,6 @@ class GraphSearch:
                         open_list.push((successor_state, actions+[action]), self.problem.getCostOfActions(actions+[action]) + self.heuristic(successor_state, self.problem))
                     else:
                         open_list.push((successor_state, actions+[action]))  # 用+防止actions为空
-
-
-
-
 
 
 def tinyMazeSearch(problem):
