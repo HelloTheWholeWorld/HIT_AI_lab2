@@ -488,6 +488,7 @@ def foodHeuristic(state, problem):
     "*** YOUR CODE HERE ***"
     # 状态是 ((x , y), foodgrid)
     # 需要注意的问题是最短的步数！因此使用bfS确定
+    # 要用最大的原因是
     foods = copy(foodGrid.asList())
     if len(foods) == 0: return 0
     heuristic = 0
