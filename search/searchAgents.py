@@ -383,7 +383,16 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    # 此处要估计对所有距离最短的曼哈顿距离之和
+    source = state[0]
+    res_to_visit = copy(state[1])
+    heuristic = 0
+    while len(res_to_visit) != 0:
+        distance, dest = min( [(util.manhattanDistance(source, temp_dest), temp_dest) for temp_dest in res_to_visit] )
+        res_to_visit.remove(dest)
+        source = dest
+        heuristic += distance
+    return heuristic
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -477,7 +486,14 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    # 状态是 ((x , y), foodgrid)
+    # 需要注意的问题是最短的步数！因此使用bfS确定
+    foods = copy(foodGrid.asList())
+    if len(foods) == 0: return 0
+    heuristic = 0
+    heuristic = max( [mazeDistance(position, food, problem.startingGameState) for food in foods] )
+    # print heuristic
+    return heuristic
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -508,7 +524,9 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # 优先吃 ××最近××  的豆子
+        # 需要返回的是actions_list, 之前写好的函数即可
+        return search.aStarSearch(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -544,7 +562,12 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # 目标状态是确定到达最近的点,其实只要脚下有点就是到达了最近的点
+        for food in self.food.asList():
+            if util.manhattanDistance((x, y), food) == 0: 
+                return True
+        return False
+
 
 def mazeDistance(point1, point2, gameState):
     """
