@@ -3,45 +3,72 @@
 
 from copy import copy
 
-def search_node(node_val_tuple_list, name):
-    '''
-    参数是
-        node_val_tuple_list:[(node, val(ture or false)), ...]
-        name:要查找的节点名字
-    '''
-    for (node, val) in node_val_tuple_list:
-        if node == name:
-            return (node, val)
-
 class Node(object):
     def __init__(self, name):
+        '''
+        初始化函数
+            name: 节点名称
+            fathers：父节点列表
+            CPT：该节点的CPT表
+                CPT表存储格式为:{
+                    ((self.name, 'true/false'), (farher1, 'true/false'), ...): probality,
+                    ...
+                }
+        '''
         self.name = name
         self.fathers = []
         self.CPT = {}
 
     def add_father(self, father):
+        '''
+        添加父节点
+            注：这里添加的父节点是有顺序的，在之后计算 P((self.name, 'true/false)|(father1.name, 'true/false)...)概率的时候
+            父节点的顺序是按照这里父节点列表的顺序的，否则在CPT表中索引不到
+        '''
         self.fathers.append(father)
     
     # 将所有（可以不包含在这个节点父节点列表中的节点）而且可以无序的(node.name ,val)节点作为输入
     def self_parents_multi(self, node_val_tuple_list):
         '''
+        计算 P((self.name, 'true/false)|parent(self.name))
+            node_val_tuple_list: 是 **所有节点** 的 (节点,值) 列表
+            注：参数的节点——值对列表是可无固定顺序的，因为会按照父节点列表的顺序取父节点，查找得到对应值，组成((节点，值),...)作为CPT的键进行索引
         '''
-        _ , self_val = search_node(node_val_tuple_list, self.name)
+        _ , self_val = Node.search_node(node_val_tuple_list, self.name)
         # 如果父节点数量为0。可直接返回对应True or False的概率
         if len(self.fathers) == 0:
-            # print('CPT find',tuple([(self.name, self_val)]))
+            # 注意这里必须为tuple([(self.name, self_val)])因为这样才会把单独的元组转换为列表再转换为元组
+            # 如果不采取这种方式，那么索引的键会是((self.name, self_val))，但是索引的键应当是((self.name. self_val),)
             return self.CPT[tuple([(self.name, self_val)])]
 
         # 节点数量不为0，先按名称的字典序过滤出
         temp_lst = [(self.name, self_val)]
         for father in self.fathers:
-            father, val = search_node(node_val_tuple_list, father)
+            father, val = Node.search_node(node_val_tuple_list, father)
             temp_lst.append((father, val))
         return self.CPT[tuple(temp_lst)]
 
+    @staticmethod
+    def search_node(node_val_tuple_list, name):
+        '''
+        从节点——值对来索引name节点对应的值("true/false")
+        参数是
+            node_val_tuple_list:[(node, val(ture or false)), ...]
+            name:要查找的节点名字
+        '''
+        for (node, val) in node_val_tuple_list:
+            if node == name:
+                return (node, val)
+
 
 class Bayes_Net(object):
+    '''
+    贝叶斯网络
+    '''
     def __init__(self, file):
+        '''
+        初始化，构建贝叶斯网络
+        '''
         with open(file, 'r', encoding='utf-8') as f:
             lines = [line.strip() for line in f.readlines()]
             lines = [line for line in lines if line != '']
@@ -102,6 +129,10 @@ class Bayes_Net(object):
 
 
     def _parse_query(self, query_file):
+        '''
+        解析query文件，获得queries
+            queries格式为((node1, 'true/false'), (node2, 'true/false'), ...)，其中元组的第一项为非条件部分的节点，剩余部分为条件部分的节点
+        '''
         with open(query_file, 'r') as f:
             lines = f.readlines()
         queries = []
@@ -111,7 +142,6 @@ class Bayes_Net(object):
             line = line.replace('|', '')
             line = line.replace(',', ' ')
             line = line.split()
-            # print(line)
             if not len(line):
                 continue
             q1 = []
@@ -127,13 +157,18 @@ class Bayes_Net(object):
         return queries
 
     def compute_queries(self, query_file):
+        '''
+        计算query_file中所有query对应的值
+        '''
         queries = self._parse_query(query_file)
-        
         for query in queries:
             print(query, str(self._compute_one(query)))
 
     
     def _compute_one(self, query):
+        '''
+        计算单个query，计算方法为通过贝叶斯公式将条件概率转换为联合概率的除法，然后调用计算联合概率的方法求解
+        '''
         if len(query) == 1:
             return self._compute_lack(list(query))
         query = list(query)
@@ -141,6 +176,9 @@ class Bayes_Net(object):
         
     
     def _compute_lack(self, node_val_tuple_list):
+        '''
+        计算联合概率，扩展为所有节点全联合概率的和
+        '''
         lack_nodes = [node.name for node in self.nodes if (node.name, 'true') \
              not in node_val_tuple_list and (node.name, 'false') \
                   not in node_val_tuple_list]
@@ -162,6 +200,9 @@ class Bayes_Net(object):
         return sum([self._compute_filled(tmp) for tmp in result])
     
     def _compute_filled(self, node_val_tuple_list):
+        '''
+        计算所有节点全联合概率，利用公式P(x1, x2, x3, ... ,xn) = ∏(i:1->n)P(xi|Parent(xi))
+        '''
         value = 1.0
         for node_name, val in node_val_tuple_list:
             node = self._search_node_by_name(node_name)
@@ -170,6 +211,9 @@ class Bayes_Net(object):
         return value
             
     def _search_node_by_name(self, node_name):
+        '''
+        通过节点名称查找节点
+        '''
         for node in self.nodes:
             if node.name == node_name:
                 return node
