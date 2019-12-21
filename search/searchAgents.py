@@ -292,7 +292,7 @@ class CornersProblem(search.SearchProblem):
         "*** YOUR CODE HERE ***"
         # CornersProblem 是基于第一到四问的搜索算法来的
 
-        # 定义状态的结构为(position, res_to_veist)
+        # 定义状态的结构为(position, res_to_visit)
         self.start_state = (self.startingPosition, list(self.corners))
         self.stepCost = 1
         self.corners_list = list(self.corners)
