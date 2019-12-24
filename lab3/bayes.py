@@ -162,7 +162,8 @@ class Bayes_Net(object):
         '''
         queries = self._parse_query(query_file)
         for query in queries:
-            print(query, str(self._compute_one(query)))
+            print ('P(',query[0],'|',query[1:],')=',str(self._compute_one(query)))
+            # print(query, str(self._compute_one(query)))
 
     
     def _compute_one(self, query):
@@ -219,6 +220,8 @@ class Bayes_Net(object):
                 return node
 
 if __name__ == '__main__':
+    # network_file = './lab3/burglarnetwork.txt'
+    # query_file = './lab3/burglarqueries.txt'
     network_file = './lab3/carnetwork.txt'
     query_file = './lab3/carqueries.txt'
     b = Bayes_Net(network_file)
